@@ -11,21 +11,17 @@ dependencies
 
 ```javascript
 const Graceful = require('node-graceful');
-
-// every event can be listened as many time as needed - all will have to finish before exiting 
+ 
 Graceful.on('exit', (done, event, signal) => {
-    // done - callback that should be called once all exiting tasks were completed
-    // event - if an event was provided by the process it will be attach as second argument else null
-    // signal - the signal that triggered the exit.example: 'SIGTERM'
-
     setTimeout(() => {
         console.log(`Received ${signal} - Exiting gracefully`)
         done()
     }, 1000);
 })
 
+//  Gracefull will wait untill all listeners has finished
 Graceful.on('exit', () => {
-       console.log("Another independant listener!);
+       console.log("Another independant listener!");
        return Promise.resolve('A promise to be waited on before dying');
     });
 ```
@@ -42,8 +38,6 @@ Add a listener to a given signal.
 Any signal can be listened on in the addition of `exit` event that will be triggered by all "Deadly events".
 Graceful listens on every signal only once and propagate the event to its listeners
 
-
-
 Default Deadly events: `SIGTERM` `SIGINT` `SIGBREAK` `SIGHUP` 
 
 #### Options
@@ -52,8 +46,9 @@ Default Deadly events: `SIGTERM` `SIGINT` `SIGBREAK` `SIGHUP`
      its better to use the built in `exit` event as it catches all events that induce process exit.
 - `listener(done, event, signal)` - listener function
     - `done` - callback that should be called once all exiting tasks were completed
-    - `event` - if an event was provided by the process it will be attach as second argument else null
+    - `event` - if an event was provided by the process it will be provided as second argument else undefined
     - `signal` - the signal that triggered the exit.example: 'SIGTERM'
+    
     **note: Promise can be returned instead of calling `done`
 - `deadly` - (options) boolean indicating weather this should be considered a process ending event.
 e.g. should `exit` event should be called due to this event. default: false.
@@ -75,6 +70,7 @@ Graceful.on('exit', (done, event, signal) => {
 })
 ```
 
+
 ### Graceful.off({String} signal, {Function} listener)
 
 Remove listener.
@@ -83,7 +79,7 @@ Remove listener.
 ```javascript
 
 const gracefulExit = () => {
-    console.log("exiting!);
+    console.log("exiting!");
 }
 
 // add listener
@@ -93,7 +89,8 @@ Graceful.on('SIGTERM', gracefulExit);
 Graceful.off('SIGTERM', gracefulExit);
 ```
 
-### Graceful.clear([{String} signal])
+
+### Graceful.clear({String} \[signal])
 
 Remove all listeners of a given signal or all listeners of all signals.
 
@@ -105,19 +102,23 @@ Remove all listeners of a given signal or all listeners of all signals.
 ```javascript
 
 const gracefulExit = () => {
-    console.log("exiting!);
+    console.log("exiting!");
 }
 
 // add listener
 Graceful.on('exit', () => {
-       console.log("Received some exit signal!);
-       return Promise.resolve('A promise to be waited on before dying');
+       console.log("Received some exit signal!");
+       return Promise.resolve("A promise to be waited on before dying");
     });
+    
 Graceful.on('exit', (done) => {
-       console.log("Another listener);
+       console.log("Another listener");
        done();
     });
 
 // remove all listener
 Graceful.clear('exit');
+
+// removes ALL listeners of ALL signals
+// Graceful.clear();
 ```
