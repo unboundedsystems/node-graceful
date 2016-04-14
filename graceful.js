@@ -4,7 +4,9 @@
 // |----------------------------------------------------------------------|
 'use strict';
 
-const Graceful = {};
+const Graceful = {
+    exitCode: 0
+};
 
 const listeners = Object.create(null);
 listeners.exit = [];
@@ -21,7 +23,6 @@ Graceful.on = function (signal, callback, deadly) {
     }
 
     listeners[signal].push(callback);
-
 };
 
 Graceful.off = function (signal, listener) {
@@ -41,6 +42,12 @@ Graceful.clear = function (signal) {
     });
 };
 
+Graceful.exit = function (code, signal) {
+    if (typeof code == 'number') Graceful.exitCode = code;
+
+    handler(signal || DEADLY_EVENTS[0])
+};
+
 // Register builtin events
 DEADLY_EVENTS.forEach(event => register(event));
 
@@ -48,28 +55,28 @@ module.exports = Graceful;
 
 function handler(signal, event) {
     let deadly = DEADLY_EVENTS.indexOf(signal) != -1;
-    let targetCount = listeners[signal].length + (deadly && listeners.exit.length || 0);
+    let signalListeners = listeners[signal].slice();
+    let exitListeners = listeners.exit.slice();
+    let targetCount = signalListeners.length + (deadly && exitListeners.length || 0);
     let count = 0;
 
     if (!targetCount) {
-        return process.nextTick(process.exit)
+        return process.nextTick(() => process.exit(Graceful.exitCode));
     }
 
     let quit = () => {
         count++;
         if (count >= targetCount) {
-            if (deadly) {
-                process.exit(0);
-            }
+            if (deadly) process.exit(Graceful.exitCode);
         }
     };
 
     // exec all listeners
-    listeners[signal].forEach(listener => invokeListener(listener, quit, event, signal));
+    signalListeners.forEach(listener => invokeListener(listener, quit, event, signal));
 
     // also invoke general exit listeners
     if (deadly) {
-        listeners.exit.forEach(listener => invokeListener(listener, quit, event, signal));
+        exitListeners.forEach(listener => invokeListener(listener, quit, event, signal));
     }
 }
 

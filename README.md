@@ -1,12 +1,11 @@
 # node-graceful
 
-node-graceful is a small helper modules without dependencies that aims to ease graceful exit
+node-graceful is a small helper module without dependencies that aims to ease graceful exit
  of a complex node program including async waiting of multiple independent modules.
 
 Installation:
 `npm i -S node-graceful`
 
-dependencies
 ## Quick example
 
 ```javascript
@@ -121,4 +120,31 @@ Graceful.clear('exit');
 
 // removes ALL listeners of ALL signals
 // Graceful.clear();
+```
+
+### Graceful.exit({Number} code, {String} \[signal])
+
+Trigger graceful process exit.
+This method is meant to be a substitute command for `process.exit()`
+to allow other modules to exit gracefully in case of error
+
+- `code` - (optional) exit code to be used. default - `0`
+- `signal` - (optional) signal to be simulating for listeners. default - `SIGTERM` 
+
+##### example
+```javascript
+
+server.listen(3333)
+        .on('listening', function () {
+            console.log('Yay!')
+        })
+        .on('error', function (err) {
+            if (err.code == 'EADDRINUSE') {
+                console.error("Damn, Port is already in use...");
+                Graceful.exit();
+            }
+        });
+
+// exit code and signal can be specified
+// Graceful.exit(1, 'SIGINT')
 ```
