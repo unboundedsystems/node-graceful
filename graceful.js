@@ -5,12 +5,14 @@
 'use strict';
 
 const Graceful = {
-    exitCode: 0
+    exitOnDouble: true,
+    timeout: 30000
 };
-
 const listeners = Object.create(null);
 listeners.exit = [];
 const DEADLY_EVENTS = ['SIGTERM', 'SIGINT', 'SIGBREAK', 'SIGHUP'];
+
+let isExiting = false;
 
 Graceful.on = function (signal, callback, deadly) {
     if (signal != 'exit') {
@@ -43,7 +45,9 @@ Graceful.clear = function (signal) {
 };
 
 Graceful.exit = function (code, signal) {
-    if (typeof code == 'number') Graceful.exitCode = code;
+    if (typeof code == 'number') {
+        process.exitCode = code;
+    }
 
     handler(signal || DEADLY_EVENTS[0])
 };
@@ -61,13 +65,13 @@ function handler(signal, event) {
     let count = 0;
 
     if (!targetCount) {
-        return process.nextTick(() => process.exit(Graceful.exitCode));
+        return process.nextTick(() => killProcess());
     }
 
     let quit = () => {
         count++;
         if (count >= targetCount) {
-            if (deadly) process.exit(Graceful.exitCode);
+            if (deadly) killProcess();
         }
     };
 
@@ -76,8 +80,21 @@ function handler(signal, event) {
 
     // also invoke general exit listeners
     if (deadly) {
-        exitListeners.forEach(listener => invokeListener(listener, quit, event, signal));
+        if (isExiting) {
+            if (Graceful.exitOnDouble) killProcess(true);
+        }
+        else {
+            isExiting = true;
+            if (parseInt(Graceful.timeout)) {
+                setTimeout(() => killProcess(true), Graceful.timeout);
+            }
+            exitListeners.forEach(listener => invokeListener(listener, quit, event, signal));
+        }
     }
+}
+
+function killProcess(force) {
+    process.exit(process.exitCode || (force ? 1 : 0));
 }
 
 function invokeListener(listener, quit, event, signal) {

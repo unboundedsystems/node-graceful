@@ -5,12 +5,14 @@
 "use strict";
 
 var Graceful = {
-    exitCode: 0
+    exitOnDouble: true,
+    timeout: 30000
 };
-
 var listeners = Object.create(null);
 listeners.exit = [];
 var DEADLY_EVENTS = ["SIGTERM", "SIGINT", "SIGBREAK", "SIGHUP"];
+
+var isExiting = false;
 
 Graceful.on = function (signal, callback, deadly) {
     if (signal != "exit") {
@@ -43,7 +45,9 @@ Graceful.clear = function (signal) {
 };
 
 Graceful.exit = function (code, signal) {
-    if (typeof code == "number") Graceful.exitCode = code;
+    if (typeof code == "number") {
+        process.exitCode = code;
+    }
 
     handler(signal || DEADLY_EVENTS[0]);
 };
@@ -64,14 +68,14 @@ function handler(signal, event) {
 
     if (!targetCount) {
         return process.nextTick(function () {
-            return process.exit(Graceful.exitCode);
+            return killProcess();
         });
     }
 
     var quit = function () {
         count++;
         if (count >= targetCount) {
-            if (deadly) process.exit(Graceful.exitCode);
+            if (deadly) killProcess();
         }
     };
 
@@ -82,10 +86,24 @@ function handler(signal, event) {
 
     // also invoke general exit listeners
     if (deadly) {
-        exitListeners.forEach(function (listener) {
-            return invokeListener(listener, quit, event, signal);
-        });
+        if (isExiting) {
+            if (Graceful.exitOnDouble) killProcess(true);
+        } else {
+            isExiting = true;
+            if (parseInt(Graceful.timeout)) {
+                setTimeout(function () {
+                    return killProcess(true);
+                }, Graceful.timeout);
+            }
+            exitListeners.forEach(function (listener) {
+                return invokeListener(listener, quit, event, signal);
+            });
+        }
     }
+}
+
+function killProcess(force) {
+    process.exit(process.exitCode || (force ? 1 : 0));
 }
 
 function invokeListener(listener, quit, event, signal) {

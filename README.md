@@ -122,13 +122,13 @@ Graceful.clear('exit');
 // Graceful.clear();
 ```
 
-### Graceful.exit({Number} code, {String} \[signal])
+### Graceful.exit({Number} \[code], {String} \[signal])
 
 Trigger graceful process exit.
 This method is meant to be a substitute command for `process.exit()`
-to allow other modules to exit gracefully in case of error
+to allow other modules to exit gracefully in case of error.
 
-- `code` - (optional) exit code to be used. default - `0`
+- `code` - (optional) exit code to be used. default - `process.exitCode`
 - `signal` - (optional) signal to be simulating for listeners. default - `SIGTERM` 
 
 ##### example
@@ -148,3 +148,26 @@ server.listen(3333)
 // exit code and signal can be specified
 // Graceful.exit(1, 'SIGINT')
 ```
+
+## Options
+
+Options are global and shared, any change will override previous values.
+
+#### Graceful.exitOnDouble = true {Boolean}
+
+Whether to exit immediately when a second deadly event is received,
+For example when Ctrl-C is pressed twice etc.. 
+When exiting due to double event, exit code will be `process.exitCode` or `1` (necessarily a non-zero) 
+
+#### Graceful.timeout = 30000 {Number}
+
+Maximum time to wait for exit listeners in `ms`.
+After exceeding the time, the process will force exit
+and the exit code will be `process.exitCode` or `1` (necessarily a non-zero)
+
+Setting the timeout to `0` will disable timeout functionality (will wait indefinitely)
+
+#### exitCode
+
+Graceful will obey process.exitCode property value when exiting
+apart from forced exit cases where the exit code must be non-zero. 
