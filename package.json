@@ -1,6 +1,6 @@
 {
   "name": "node-graceful",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Graceful process exit manager. allows waiting on multiple async services.",
   "main": "graceful.js",
   "repository": {
@@ -17,8 +17,8 @@
     "shutdown"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "transpile": "cat graceful.js | 6to5  > es5/index.js",
+    "test": "node tests/runner",
+    "transpile": "cat graceful.js | 6to5 > es5/index.js",
     "prepublish": "npm run transpile"
   },
   "author": "mrbar42",

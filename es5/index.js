@@ -1,112 +1,168 @@
 // +----------------------------------------------------------------------+
-// | node-graceful v0.1.1 (https://github.com/mrbar42/node-graceful)      |
+// | node-graceful v0.2.2 (https://github.com/mrbar42/node-graceful)      |
 // | Graceful process exit manager.                                       |
 // |----------------------------------------------------------------------|
 "use strict";
 
-var Graceful = {
-    exitOnDouble: true,
-    timeout: 30000
-};
-var listeners = Object.create(null);
-listeners.exit = [];
-var DEADLY_EVENTS = ["SIGTERM", "SIGINT", "SIGBREAK", "SIGHUP"];
+function Graceful() {
+    // options
+    this.exitOnDouble = true;
+    this.timeout = 30000;
 
-var isExiting = false;
+    // constants
+    this.DEADLY_SIGNALS = ["SIGTERM", "SIGINT", "SIGBREAK", "SIGHUP"];
 
-Graceful.on = function (signal, callback, deadly) {
-    if (signal != "exit") {
-        register(signal);
+    // state
+    this._listeners = Object.create(null);
+    this.isExiting = false;
+}
 
-        // add signal to deadly list
-        if (deadly && DEADLY_EVENTS.indexOf(signal) == -1) {
-            DEADLY_EVENTS.push(signal);
-        }
-    }
+Graceful.prototype.on = function (signal, callback, deadly) {
+    this._registerSignal(signal);
 
-    listeners[signal].push(callback);
-};
+    this._listeners[signal].push(callback);
 
-Graceful.off = function (signal, listener) {
-    var index = listeners[signal].indexOf(listener);
-
-    if (index != -1) {
-        listeners[signal].splice(index, 1);
+    // add signal to deadly list
+    if (deadly && this.DEADLY_SIGNALS.indexOf(signal) === -1) {
+        this.DEADLY_SIGNALS.push(signal);
     }
 };
 
-Graceful.clear = function (signal) {
-    var keys = signal ? [signal] : Object.keys(listeners);
+Graceful.prototype.off = function (signal, listener) {
+    if (!this._listeners[signal]) return;
 
-    keys.forEach(function (sig) {
-        delete listeners[sig];
-        process.removeListener(sig, handler);
-    });
+    // remove listener if exists
+    var index = this._listeners[signal].indexOf(listener);
+    if (index !== -1) this._listeners[signal].splice(index, 1);
+
+    // clear master listener if no listeners left
+    if (!this._listeners[signal].length) {
+        this._unregisterSignal(signal);
+    }
 };
 
-Graceful.exit = function (code, signal) {
+Graceful.prototype.clear = function (signal) {
+    var _this = this;
+    if (signal) {
+        delete this._listeners[signal];
+        this._unregisterSignal(signal);
+    } else {
+        Object.keys(this._listeners).forEach(function (sig) {
+            return _this.clear(signal);
+        });
+    }
+};
+
+Graceful.prototype.exit = function (code, signal) {
     if (typeof code == "number") {
         process.exitCode = code;
     }
 
-    handler(signal || DEADLY_EVENTS[0]);
+    var simulatedSignal = signal || this.DEADLY_SIGNALS[0];
+
+    this._processSignal(simulatedSignal);
 };
 
-// Register builtin events
-DEADLY_EVENTS.forEach(function (event) {
-    return register(event);
-});
+Graceful.prototype._registerSignal = function (signal) {
+    var _this = this;
+    if (this._listeners[signal]) return;
 
-module.exports = Graceful;
+    this._listeners[signal] = [];
 
-function handler(signal, event) {
-    var deadly = DEADLY_EVENTS.indexOf(signal) != -1;
-    var signalListeners = listeners[signal].slice();
-    var exitListeners = listeners.exit.slice();
-    var targetCount = signalListeners.length + (deadly && exitListeners.length || 0);
-    var count = 0;
+    var handler = function (event) {
+        return _this._processSignal(signal, event);
+    };
 
+    // handle special 'exit' event case
+    if (signal == "exit") {
+        this.DEADLY_SIGNALS.forEach(function (deadlySignal) {
+            return process.on(deadlySignal, handler);
+        });
+    } else {
+        process.on(signal, handler);
+    }
+
+    // store handler on listeners array for future ref
+    this._listeners[signal].__handler__ = handler;
+};
+
+Graceful.prototype._unregisterSignal = function (signal) {
+    if (!this._listeners[signal]) return;
+
+    var handler = this._listeners[signal].__handler__;
+
+    // handle special 'exit' event case
+    if (signal == "exit") {
+        this.DEADLY_SIGNALS.forEach(function (deadlySignal) {
+            return process.removeListener(deadlySignal, handler);
+        });
+    } else {
+        process.removeListener(signal, handler);
+    }
+
+    delete this._listeners[signal];
+};
+
+Graceful.prototype._processSignal = function (signal, event) {
+    var _this = this;
+    var deadly = this.DEADLY_SIGNALS.indexOf(signal) != -1;
+    var listeners = this._listeners[signal] && this._listeners[signal].slice();
+    var exitListeners = this._listeners.exit && this._listeners.exit.slice();
+    var targetCount = listeners && listeners.length || 0;
+
+    // also include exit listeners if deadly
+    if (deadly && exitListeners) {
+        targetCount += exitListeners.length;
+    }
+
+    // this should never happen
     if (!targetCount) {
         return process.nextTick(function () {
-            return killProcess();
+            return _this._killProcess();
         });
     }
 
-    var quit = function () {
-        count++;
-        if (count >= targetCount) {
-            if (deadly) killProcess();
-        }
-    };
+    var quit = (function () {
+        var count = 0;
+        return function () {
+            count++;
+            if (count >= targetCount) {
+                if (deadly) _this._killProcess();
+            }
+        };
+    })();
 
-    // exec all listeners
-    signalListeners.forEach(function (listener) {
-        return invokeListener(listener, quit, event, signal);
-    });
+    // exec signal specific listeners
+    if (listeners) {
+        listeners.forEach(function (listener) {
+            return _this._invokeListener(listener, quit, event, signal);
+        });
+    }
 
-    // also invoke general exit listeners
-    if (deadly) {
-        if (isExiting) {
-            if (Graceful.exitOnDouble) killProcess(true);
+
+    // also invoke exit listeners
+    if (deadly && exitListeners) {
+        if (this.isExiting) {
+            if (this.exitOnDouble) this._killProcess(true);
         } else {
-            isExiting = true;
-            if (parseInt(Graceful.timeout)) {
+            this.isExiting = true;
+            if (parseInt(this.timeout)) {
                 setTimeout(function () {
-                    return killProcess(true);
-                }, Graceful.timeout);
+                    return _this._killProcess(true);
+                }, this.timeout);
             }
             exitListeners.forEach(function (listener) {
-                return invokeListener(listener, quit, event, signal);
+                return _this._invokeListener(listener, quit, event, signal);
             });
         }
     }
-}
+};
 
-function killProcess(force) {
+Graceful.prototype._killProcess = function (force) {
     process.exit(process.exitCode || (force ? 1 : 0));
-}
+};
 
-function invokeListener(listener, quit, event, signal) {
+Graceful.prototype._invokeListener = function (listener, quit, event, signal) {
     var invoked = false;
     // listener specific callback
     var done = function () {
@@ -121,14 +177,8 @@ function invokeListener(listener, quit, event, signal) {
     if (typeof Promise != "undefined" && retVal instanceof Promise) {
         retVal.then(done)["catch"](done);
     }
-}
+};
 
-function register(signal) {
-    if (!listeners[signal]) {
-        listeners[signal] = [];
-        process.on(signal, function (event) {
-            return handler(signal, event);
-        });
-    }
-}
+var graceful = new Graceful();
+module.exports = graceful;
 
