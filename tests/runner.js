@@ -40,6 +40,12 @@ let tests = [
         child: './exit-on-double',
         expectedOutput: '',
         expectedExitCode: 1
+    },
+    {
+        name: "Wait for promise",
+        child: './wait-for-promise',
+        expectedOutput: 'okok',
+        expectedExitCode: 0
     }
 ];
 
