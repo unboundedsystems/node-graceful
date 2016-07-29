@@ -52,6 +52,10 @@ Default Deadly events: `SIGTERM` `SIGINT` `SIGBREAK` `SIGHUP`
 - `deadly` - (options) boolean indicating weather this should be considered a process ending event.
 e.g. should `exit` event should be called due to this event. default: false.
 
+#### Return value
+the method returns a function that when invoked, removes the listener.
+the function is a shorthand for `.off` method
+
 ##### example
 ```javascript
 
@@ -67,6 +71,10 @@ Graceful.on('exit', (done, event, signal) => {
         done()    
     })
 })
+
+// use the return value to remove listener
+const removeListener = Graceful.on('exit', () => {})
+removeListener(); // listener was removed
 ```
 
 
@@ -82,10 +90,13 @@ const gracefulExit = () => {
 }
 
 // add listener
-Graceful.on('SIGTERM', gracefulExit);
+let removeListener = Graceful.on('SIGTERM', gracefulExit);
 
 // remove listener
 Graceful.off('SIGTERM', gracefulExit);
+
+// or use return value of on
+removeListener();
 ```
 
 

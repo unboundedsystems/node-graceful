@@ -8,7 +8,9 @@ let handler = done => {
 };
 
 Graceful.on('exit', handler);
-
 Graceful.off('exit', handler);
+
+let removeListener = Graceful.on('exit', handler.bind(null));
+removeListener();
 
 Graceful.exit();
