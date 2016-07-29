@@ -17,15 +17,20 @@ function Graceful() {
     this.isExiting = false;
 }
 
-Graceful.prototype.on = function (signal, callback, deadly) {
+Graceful.prototype.on = function (signal, listener, deadly) {
+    var _this = this;
     this._registerSignal(signal);
 
-    this._listeners[signal].push(callback);
+    this._listeners[signal].push(listener);
 
     // add signal to deadly list
     if (deadly && this.DEADLY_SIGNALS.indexOf(signal) === -1) {
         this.DEADLY_SIGNALS.push(signal);
     }
+
+    return function () {
+        return _this.off(signal, listener);
+    };
 };
 
 Graceful.prototype.off = function (signal, listener) {
@@ -174,7 +179,7 @@ Graceful.prototype._invokeListener = function (listener, quit, event, signal) {
 
     var retVal = listener(done, event, signal);
     // allow returning a promise
-    if (typeof Promise != "undefined" && retVal instanceof Promise) {
+    if (retVal && typeof retVal.then === "function" && typeof retVal["catch"] === "function") {
         retVal.then(done)["catch"](done);
     }
 };
