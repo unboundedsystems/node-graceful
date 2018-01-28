@@ -1,5 +1,7 @@
 # node-graceful
 
+[![Build Status](https://travis-ci.org/mrbar42/node-graceful.svg?branch=master)](https://travis-ci.org/mrbar42/node-graceful)
+
 node-graceful is a small helper module without dependencies that aims to ease graceful exit
  of a complex node program including async waiting of multiple independent modules.
 
