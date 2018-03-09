@@ -1,6 +1,6 @@
 'use strict';
 
-const Graceful = require('../graceful');
+const Graceful = require('../');
 
 let count = 0;
 Graceful.on('exit', done => {

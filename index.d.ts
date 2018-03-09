@@ -19,3 +19,5 @@ export declare module Graceful {
 
     function exit(code?: number | string, signal?: string): void;
 }
+
+export default Graceful
