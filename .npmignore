@@ -1,0 +1,7 @@
+tests/
+.gitignore
+.npmignore
+.travis.yml
+LICENSE
+tslint.json
+package-lock.json

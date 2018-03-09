@@ -1,6 +1,6 @@
 'use strict';
 
-const Graceful = require('../graceful');
+const Graceful = require('../');
 
 Graceful.on('exit', done => {
     setTimeout(() => {

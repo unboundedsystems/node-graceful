@@ -1,6 +1,6 @@
 'use strict';
 
-const Graceful = require('../graceful');
+const Graceful = require('../');
 
 let handlerSuccess = () => {
     return new Promise(function (resolve) {

@@ -1,6 +1,6 @@
 'use strict';
 
-const Graceful = require('../graceful');
+const Graceful = require('../');
 
 let handler = done => {
     process.stdout.write('should-not-run');

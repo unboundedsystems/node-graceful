@@ -1,5 +1,5 @@
 // +----------------------------------------------------------------------+
-// | node-graceful v0.2.2 (https://github.com/mrbar42/node-graceful)      |
+// | node-graceful v0.3.0 (https://github.com/mrbar42/node-graceful)      |
 // | Graceful process exit manager.                                       |
 // |----------------------------------------------------------------------|
 'use strict';
@@ -17,7 +17,7 @@ function Graceful() {
     this.isExiting = false;
 }
 
-Graceful.prototype.on = function (signal, listener, deadly) {
+Graceful.prototype.on = function on(signal, listener, deadly) {
     this._registerSignal(signal);
 
     this._listeners[signal].push(listener);
@@ -30,7 +30,7 @@ Graceful.prototype.on = function (signal, listener, deadly) {
     return () => this.off(signal, listener);
 };
 
-Graceful.prototype.off = function (signal, listener) {
+Graceful.prototype.off = function off(signal, listener) {
     if (!this._listeners[signal]) return;
 
     // remove listener if exists
@@ -43,7 +43,7 @@ Graceful.prototype.off = function (signal, listener) {
     }
 };
 
-Graceful.prototype.clear = function (signal) {
+Graceful.prototype.clear = function clear(signal) {
     if (signal) {
         delete this._listeners[signal];
         this._unregisterSignal(signal);
@@ -51,12 +51,12 @@ Graceful.prototype.clear = function (signal) {
     else {
         Object
             .keys(this._listeners)
-            .forEach(sig => this.clear(signal));
+            .forEach(sig => this.clear(sig));
     }
 };
 
-Graceful.prototype.exit = function (code, signal) {
-    if (typeof code == 'number') {
+Graceful.prototype.exit = function exit(code, signal) {
+    if (typeof code === 'number') {
         process.exitCode = code;
     }
 
@@ -65,7 +65,7 @@ Graceful.prototype.exit = function (code, signal) {
     this._processSignal(simulatedSignal);
 };
 
-Graceful.prototype._registerSignal = function (signal) {
+Graceful.prototype._registerSignal = function _registerSignal(signal) {
     if (this._listeners[signal]) return;
 
     this._listeners[signal] = [];
@@ -73,7 +73,7 @@ Graceful.prototype._registerSignal = function (signal) {
     let handler = event => this._processSignal(signal, event);
 
     // handle special 'exit' event case
-    if (signal == 'exit') {
+    if (signal === 'exit') {
         this.DEADLY_SIGNALS.forEach(deadlySignal => process.on(deadlySignal, handler));
     }
     else {
@@ -84,13 +84,13 @@ Graceful.prototype._registerSignal = function (signal) {
     this._listeners[signal].__handler__ = handler;
 };
 
-Graceful.prototype._unregisterSignal = function (signal) {
+Graceful.prototype._unregisterSignal = function _unregisterSignal(signal) {
     if (!this._listeners[signal]) return;
 
     let handler = this._listeners[signal].__handler__;
 
     // handle special 'exit' event case
-    if (signal == 'exit') {
+    if (signal === 'exit') {
         this.DEADLY_SIGNALS.forEach(deadlySignal => process.removeListener(deadlySignal, handler));
     }
     else {
@@ -100,8 +100,8 @@ Graceful.prototype._unregisterSignal = function (signal) {
     delete this._listeners[signal];
 };
 
-Graceful.prototype._processSignal = function (signal, event) {
-    let deadly = this.DEADLY_SIGNALS.indexOf(signal) != -1;
+Graceful.prototype._processSignal = function _processSignal(signal, event) {
+    let deadly = this.DEADLY_SIGNALS.indexOf(signal) !== -1;
     let listeners = this._listeners[signal] && this._listeners[signal].slice();
     let exitListeners = this._listeners['exit'] && this._listeners['exit'].slice();
     let targetCount = listeners && listeners.length || 0;
@@ -116,14 +116,14 @@ Graceful.prototype._processSignal = function (signal, event) {
         return process.nextTick(() => this._killProcess());
     }
 
-    let quit = (()=> {
+    let quit = (() => {
         let count = 0;
         return () => {
             count++;
             if (count >= targetCount) {
                 if (deadly) this._killProcess();
             }
-        }
+        };
     })();
 
     // exec signal specific listeners
@@ -139,7 +139,7 @@ Graceful.prototype._processSignal = function (signal, event) {
         }
         else {
             this.isExiting = true;
-            if (parseInt(this.timeout)) {
+            if (Number(this.timeout)) {
                 setTimeout(() => this._killProcess(true), this.timeout);
             }
             exitListeners.forEach(listener => this._invokeListener(listener, quit, event, signal));
@@ -147,11 +147,11 @@ Graceful.prototype._processSignal = function (signal, event) {
     }
 };
 
-Graceful.prototype._killProcess = function (force) {
+Graceful.prototype._killProcess = function _killProcess(force) {
     process.exit(process.exitCode || (force ? 1 : 0));
 };
 
-Graceful.prototype._invokeListener = function (listener, quit, event, signal) {
+Graceful.prototype._invokeListener = function _invokeListener(listener, quit, event, signal) {
     let invoked = false;
     // listener specific callback
     let done = () => {

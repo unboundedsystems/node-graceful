@@ -1,6 +1,6 @@
 'use strict';
 
-const Graceful = require('../graceful');
+const Graceful = require('../');
 
 Graceful.timeout = 1000;
 

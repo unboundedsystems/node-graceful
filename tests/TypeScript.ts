@@ -1,4 +1,4 @@
-import {Graceful} from "../graceful";
+import {Graceful} from "../";
 
 const listener = (done, event, signal) => {
     done();
