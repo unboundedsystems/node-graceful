@@ -1,0 +1,17 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es2015",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noEmit": true,
+    "alwaysStrict": true,
+    "preserveConstEnums": true,
+    "sourceMap": false,
+    "moduleResolution": "Node",
+    "declaration": true,
+    "lib": [
+      "es2015"
+    ]
+  }
+}

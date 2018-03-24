@@ -1,4 +1,4 @@
-type SignalListener = (done: () => void, event: any, signal: string) => (undefined | Promise<any>)
+type SignalListener = (done: () => void, event: any, signal: string) => (undefined | Promise<void> | Promise<any> | Promise<Error>)
 type cancelSubscription = () => void
 
 
