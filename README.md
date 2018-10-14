@@ -3,10 +3,12 @@
 [![Build Status](https://travis-ci.org/mrbar42/node-graceful.svg?branch=master)](https://travis-ci.org/mrbar42/node-graceful)
 
 node-graceful is a small helper module without dependencies that aims to ease graceful exit
- of a complex node program including async waiting of multiple independent modules.
+ of complex node programs including async waiting on multiple independent modules.
 
 Installation:
 `npm i -S node-graceful`
+
+Had any problem? open an [issue](https://github.com/mrbar42/node-graceful/issues/new)
 
 ## Quick example
 
@@ -20,7 +22,7 @@ Graceful.on('exit', (done, event, signal) => {
     }, 1000);
 })
 
-//  Gracefull will wait untill all listeners has finished
+//  Gracefull will wait untill all listeners had finished
 Graceful.on('exit', () => {
        console.log("Another independant listener!");
        return Promise.resolve('A promise to be waited on before dying');
