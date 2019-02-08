@@ -1,6 +1,6 @@
 {
   "name": "node-graceful",
-  "version": "0.3.1",
+  "version": "1.0.1",
   "description": "Graceful process exit manager. allows waiting on multiple async services.",
   "main": "index",
   "repository": {
@@ -25,7 +25,7 @@
     "prepublishOnly": "npm run test && npm run transpile"
   },
   "author": "mrbar42",
-  "license": "WTFPL",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "9.6.0",
     "ts-node": "5.0.1",

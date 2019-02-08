@@ -5,3 +5,4 @@ tests/
 LICENSE
 tslint.json
 package-lock.json
+tsconfig.json

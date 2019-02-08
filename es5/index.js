@@ -1,5 +1,5 @@
 // +----------------------------------------------------------------------+
-// | node-graceful v0.3.0 (https://github.com/mrbar42/node-graceful)      |
+// | node-graceful v0.3.1 (https://github.com/mrbar42/node-graceful)      |
 // | Graceful process exit manager.                                       |
 // |----------------------------------------------------------------------|
 'use strict';
@@ -146,3 +146,6 @@ Graceful.prototype._invokeListener = function _invokeListener(listener, quit, ev
 };
 var graceful = new Graceful();
 module.exports = graceful;
+// monkey patch exports to support both old & new & Typescript module systems
+module.exports.Graceful = graceful;
+module.exports["default"] = graceful;
