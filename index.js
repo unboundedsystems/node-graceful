@@ -101,7 +101,7 @@ Graceful.prototype._unregisterSignal = function _unregisterSignal(signal) {
 };
 
 Graceful.prototype._processSignal = function _processSignal(signal, event) {
-    let deadly = this.DEADLY_SIGNALS.indexOf(signal) !== -1;
+    let deadly = signal === 'exit' || this.DEADLY_SIGNALS.indexOf(signal) !== -1;
     let listeners = this._listeners[signal] && this._listeners[signal].slice();
     let exitListeners = this._listeners['exit'] && this._listeners['exit'].slice();
     let targetCount = listeners && listeners.length || 0;
