@@ -1,5 +1,5 @@
 // +----------------------------------------------------------------------+
-// | node-graceful v0.3.1 (https://github.com/mrbar42/node-graceful)      |
+// | node-graceful v2.0.0 (https://github.com/mrbar42/node-graceful)      |
 // | Graceful process exit manager.                                       |
 // |----------------------------------------------------------------------|
 'use strict';
@@ -107,7 +107,7 @@ Graceful.prototype._processSignal = function _processSignal(signal, event) {
     let targetCount = listeners && listeners.length || 0;
 
     // also include exit listeners if deadly
-    if (deadly && exitListeners) {
+    if (deadly && exitListeners && signal !== 'exit') {
         targetCount += exitListeners.length;
     }
 
@@ -127,7 +127,7 @@ Graceful.prototype._processSignal = function _processSignal(signal, event) {
     })();
 
     // exec signal specific listeners
-    if (listeners) {
+    if (listeners && signal !== 'exit') {
         listeners.forEach(listener => this._invokeListener(listener, quit, event, signal));
     }
 
