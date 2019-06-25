@@ -1,5 +1,5 @@
 // +----------------------------------------------------------------------+
-// | node-graceful v2.0.0 (https://github.com/mrbar42/node-graceful)      |
+// | node-graceful v2 (https://github.com/mrbar42/node-graceful)      |
 // | Graceful process exit manager.                                       |
 // |----------------------------------------------------------------------|
 'use strict';
