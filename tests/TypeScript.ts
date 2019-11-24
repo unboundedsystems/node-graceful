@@ -1,26 +1,22 @@
-import Graceful from "../";
+import Graceful, {GracefulListener} from "../";
 
-const listener = (done: () => {}, event: any, signal: string) => {
-    done();
-};
+const listener = (signal: string, event?: object) => void 0;
+const listenerPromise = (signal: string, event?: object) => Promise.resolve("abc");
+const listenerPromise1 = (signal: string, event?: object) => Promise.resolve({});
+const listenerPromise2 = (signal: string, event?: object) => new Promise((resolve) => resolve());
+const listenerPromise3 = (signal: string, event?: object) => new Promise((resolve) => resolve());
+const listenerPromise4 = () => null;
 
-const listenerPromise = (done: () => {}, event: any, signal: string) => Promise.resolve("abc");
 Graceful.on("exit", listener);
-const listenerPromise1 = (done: () => {}, event: any, signal: string) => Promise.resolve({});
-Graceful.on("exit", listenerPromise1);
-const listenerPromise2 = (done: () => {}, event: any, signal: string) => new Promise((resolve) => {
-    resolve();
-});
-Graceful.on("exit", listenerPromise2);
-
-Graceful.on("exit", listener, true);
 Graceful.on("exit", listenerPromise);
-Graceful.on("exit", listenerPromise, true);
+Graceful.on("exit", listenerPromise1);
+Graceful.on("exit", listenerPromise2);
+Graceful.on("exit", listenerPromise3);
+Graceful.on("exit", listenerPromise4);
 
 Graceful.off("exit", listener);
 
 Graceful.clear();
-Graceful.clear("SIGTERM");
 
 Graceful.exit();
 Graceful.exit(1);
@@ -29,3 +25,8 @@ Graceful.exit("SIGTERM");
 
 Graceful.exitOnDouble = true;
 Graceful.timeout = 30000;
+Graceful.captureExceptions = true;
+Graceful.captureRejections = true;
+
+const indirectRef: typeof Graceful = Graceful;
+indirectRef.on("exit", listener);

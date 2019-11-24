@@ -2,9 +2,11 @@
 
 const Graceful = require('../');
 
-let handler = done => {
-    process.stdout.write('should-not-run');
-    done()
+let handler = () => {
+    return new Promise((resolve) => {
+        process.stdout.write('should-not-run');
+        resolve();
+    });
 };
 
 Graceful.on('exit', handler);

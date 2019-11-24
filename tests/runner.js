@@ -67,6 +67,48 @@ let tests = [
         child: './wait-for-promise',
         expectedOutput: 'okok',
         expectedExitCode: 0
+    },
+    {
+        name: 'Uncaught Error',
+        child: './uncaught-error',
+        expectedOutput: 'ok',
+        expectedExitCode: 1
+    },
+    {
+        name: 'Uncaught Error - Disabled',
+        child: './uncaught-error-disabled',
+        expectedOutput: '',
+        expectedExitCode: 0
+    },
+    {
+        name: 'Uncaught Error - Toggled',
+        child: './uncaught-error-toggled',
+        expectedOutput: '',
+        expectedExitCode: 0
+    },
+    {
+        name: 'Unhandled Rejection',
+        child: './unhandled-rejection',
+        expectedOutput: 'ok',
+        expectedExitCode: 1
+    },
+    {
+        name: 'Unhandled Rejection - Disabled',
+        child: './unhandled-rejection',
+        expectedOutput: '',
+        expectedExitCode: 0
+    },
+    {
+        name: 'Unhandled Rejection - Toggled',
+        child: './unhandled-rejection',
+        expectedOutput: '',
+        expectedExitCode: 0
+    },
+    {
+        name: 'Multiple Errors',
+        child: './multiple-errors',
+        expectedOutput: 'error',
+        expectedExitCode: 1
     }
 ];
 
@@ -89,8 +131,10 @@ function asyncRunner() {
     count++;
 
     let path = require.resolve(__dirname + '/' + test.child);
+    let timer;
     let ended = false;
     let child = execFile('node', [path], (err, stdout) => {
+        clearTimeout(timer);
         ended = true;
         if (err && /Error/.test(err.message)) {
             console.error(`[${count}/${total}] [ERROR] ${test.name}: Failed with error\n`,
@@ -116,6 +160,10 @@ function asyncRunner() {
             process.kill(child.pid, test.signal);
         }, 500);
     }
+
+    timer = setTimeout(() => {
+        throw new Error('Test took too long');
+    }, 5000);
 }
 
 asyncRunner();
