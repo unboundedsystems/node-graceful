@@ -4,11 +4,13 @@ const Graceful = require('../');
 
 Graceful.timeout = 1000;
 
-Graceful.on('exit', done => {
-    setTimeout(() => {
-        process.stdout.write('not-supposed-to-run');
-        done();
-    }, 2000);
+Graceful.on('exit', () => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            process.stdout.write('not-supposed-to-run');
+            resolve();
+        }, 2000);
+    });
 });
 
 Graceful.exit();

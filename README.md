@@ -1,12 +1,16 @@
 # node-graceful
 
-[![Build Status](https://travis-ci.org/mrbar42/node-graceful.svg?branch=master)](https://travis-ci.org/mrbar42/node-graceful)[![npm](https://img.shields.io/npm/v/node-graceful.svg)](https://www.npmjs.com/package/node-graceful)
+[![Build Status](https://travis-ci.org/mrbar42/node-graceful.svg?branch=master)](https://travis-ci.org/mrbar42/node-graceful) [![npm](https://img.shields.io/npm/v/node-graceful.svg)](https://www.npmjs.com/package/node-graceful) ![npm bundle size (version)](https://img.shields.io/bundlephobia/minzip/node-graceful?label=Install%20size)
 
 node-graceful is a small helper module without dependencies that aims to ease graceful exit
  of complex node programs including async waiting on multiple independent modules.
 
 Installation:
-`npm i -S node-graceful`
+```sh
+npm i -S node-graceful
+
+yarn add node-graceful
+```
 
 Had any problem? open an [issue](https://github.com/mrbar42/node-graceful/issues/new)
 
@@ -14,127 +18,158 @@ Had any problem? open an [issue](https://github.com/mrbar42/node-graceful/issues
 
 ```javascript
 const Graceful = require('node-graceful');
+Graceful.captureExceptions = true;
 
-Graceful.on('exit', (done, event, signal) => {
-    setTimeout(() => {
-        console.log(`Received ${signal} - Exiting gracefully`)
-        done()
-    }, 1000);
-})
+Graceful.on('exit', async () => {
+    console.log(`Received ${signal} - Exiting gracefully`);
+    await webServer.close(); 
+});
 
-//  Gracefull will wait untill all listeners had finished
-Graceful.on('exit', () => {
-       console.log("Another independant listener!");
-       return Promise.resolve('A promise to be waited on before dying');
+//  Graceful will wait until all listeners had finished
+Graceful.on('exit', (signal) => {
+    return new Promise((resolve) => {
+        console.log("Another independent listener!");
+        setTimeout(() => resolve(), 1000);    
     });
+});
 ```
 
-The module is written in Node 4.x flavored es6.
-  To get the es5 transpiled version use `require('node-graceful/es5')`
+Typescript
+```typescript
+import Graceful from 'node-graceful';
+Graceful.captureExceptions = true;
 
+Graceful.on('exit', async () => {
+  await server.close();
+});
+```
 
-## Graceful
+## Quick Docs
 
-### Graceful.on({String} signal, {Function} listener [, {Boolean} deadly])
+```typescript
+interface Graceful {
+    // add exit listener
+    on(signal: 'exit', listener: GracefulListener): GracefulSubscription;
+    // remove exit listener
+    off(signal: 'exit', listener: GracefulListener): void;
+    // remove all exit listeners
+    clear(): void;
+    // trigger graceful process exit with or without exit code and signal
+    exit(): void;
+    exit(exitCode: number): void;
+    exit(exitSignal: string): void;
+    exit(exitCode: number, exitSignal: string): void;
 
-Add a listener to a given signal.
-Any signal can be listened on in the addition of `exit` event that will be triggered by all "Deadly events".
-Graceful listens on every signal only once and propagate the event to its listeners
+    // whether to exit immediately when a second kill signal is received
+    exitOnDouble: boolean; // default: true
+    // maximum time to wait before hard-killing the process
+    timeout: number; // default: 30000
+    // whether to treat uncaught exceptions as process terminating events
+    captureExceptions: boolean; // default: false
+    // whether to treat unhandled promise rejections as process terminating events
+    captureRejections: boolean; // default: false
+}
 
-Default Deadly events: `SIGTERM` `SIGINT` `SIGBREAK` `SIGHUP`
+type GracefulListener = (signal: string, details?: object) => (void | any | Promise<any> | Promise<Error>);
+type GracefulSubscription = () => void;
+```
+Read bellow for full API reference.
+
+## API Reference
+
+### Graceful.on('exit', {Function} listener)
+
+Add exit listener to be called when process exit is triggered.
+`Graceful` listens on all terminating signals and triggers `exit` accordingly.
+
+Terminating events: `SIGTERM` `SIGINT` `SIGBREAK` `SIGHUP`
 
 #### Options
-- `signal` - a string representing the signal name. this will be used directly as the event name on `process` object.
-    Common signals can be found [here](https://nodejs.org/api/process.html#process_signal_events).
-     its better to use the built in `exit` event as it catches all events that induce process exit.
-- `listener(done, event, signal)` - listener function
-    - `done` - callback that should be called once all exiting tasks were completed
-    - `event` - if an event was provided by the process it will be provided as second argument else undefined
-    - `signal` - the signal that triggered the exit.example: 'SIGTERM'
+- `listener(signal, details?)` - listener function
+    - `signal` - the signal that triggered the exit. example: 'SIGTERM'
+    - `details` - optional details provided by the trigger. for example in case of `unhandledException` this will be an error object. on external signal it will be undefined.
 
-    **note: Promise can be returned instead of calling `done`
-- `deadly` - (options) boolean indicating weather this should be considered a process ending event.
-e.g. should `exit` event should be called due to this event. default: false.
+#### Examples
+The listener function can return a promise that will delay the process exit until it's fulfilment.
+```typescript
+Graceful.on('exit', () => Promise.resolve('I Am A Promise!'));
+Graceful.on('exit', async () => {
+  // async function always returns promise so shutdown will be delayed until this functions ends
+  await webServer.close();
 
-#### Return value
-the method returns a function that when invoked, removes the listener.
-the function is a shorthand for `.off` method
+  return Promise.all([
+    controller.close(),
+    dbClient.close()
+  ]);
+});
+```
 
-##### example
-```javascript
-
+if old style callback is needed, wrap the logic with a promise
+```
 const server = require('http').createServer(function (req, res) {
     res.write('ok');
     res.end()
 })
-
-Graceful.on('exit', (done, event, signal) => {
-    console.log("Received exit signal");
-    server.close(() => {
-        console.log("Closed all connection. safe to exit");
-        done()
-    })
-})
-
-// use the return value to remove listener
-const removeListener = Graceful.on('exit', () => {})
-removeListener(); // listener was removed
+Graceful.on('exit', () => {
+  return new Promise((resolve, reject) => {
+    server.close((err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+});
 ```
 
-
-### Graceful.off({String} signal, {Function} listener)
-
-Remove listener.
+#### Return value
+the method returns a function that when invoked, removes the listener subscription.
+the function is a shorthand for `.off` method
 
 ##### example
-```javascript
+```typescript
+// use the return value to remove listener
+const removeListener = Graceful.on('exit', () => {});
+removeListener(); // listener was removed and will not be triggered
+```
 
+### Graceful.off('exit', {Function} listener)
+
+Remove a previously subscribed listener.
+
+##### example
+```typescript
 const gracefulExit = () => {
     console.log("exiting!");
-}
+};
 
 // add listener
 let removeListener = Graceful.on('SIGTERM', gracefulExit);
 
 // remove listener
 Graceful.off('SIGTERM', gracefulExit);
-
-// or use return value of on
-removeListener();
+// same as invoking the return value
+// removeListener();
 ```
 
 
-### Graceful.clear({String} \[signal])
+### Graceful.clear()
 
-Remove all listeners of a given signal or all listeners of all signals.
-
-- `signal` - (optional) signal to be cleared from all of its listeners.
- if no signal is provided all listeners for all signals are cleared
- effectively resetting the module.
+Unsubscribe all `exit` listeners.
 
 ##### example
 ```javascript
-
-const gracefulExit = () => {
-    console.log("exiting!");
-}
-
 // add listener
 Graceful.on('exit', () => {
-       console.log("Received some exit signal!");
-       return Promise.resolve("A promise to be waited on before dying");
-    });
+   console.log("Received some exit signal!");
+   return Promise.resolve("A promise to be waited on before dying");
+});
 
 Graceful.on('exit', (done) => {
-       console.log("Another listener");
-       done();
-    });
+   console.log("Another listener");
+   done();
+});
 
 // remove all listener
-Graceful.clear('exit');
-
-// removes ALL listeners of ALL signals
-// Graceful.clear();
+Graceful.clear();
 ```
 
 ### Graceful.exit({Number} \[code], {String} \[signal])
@@ -161,20 +196,22 @@ server.listen(3333)
         });
 
 // exit code and signal can be specified
-// Graceful.exit(1, 'SIGINT')
+// Graceful.exit(1);
+// Graceful.exit(1, 'SIGINT');
+// Graceful.exit('SIGINT');
 ```
 
 ## Options
 
 Options are global and shared, any change will override previous values.
 
-#### Graceful.exitOnDouble = true {Boolean}
+#### Graceful.exitOnDouble = true {boolean}
 
 Whether to exit immediately when a second deadly event is received,
 For example when Ctrl-C is pressed twice etc..
 When exiting due to double event, exit code will be `process.exitCode` or `1` (necessarily a non-zero)
 
-#### Graceful.timeout = 30000 {Number}
+#### Graceful.timeout = 30000 {number}
 
 Maximum time to wait for exit listeners in `ms`.
 After exceeding the time, the process will force exit
@@ -182,7 +219,27 @@ and the exit code will be `process.exitCode` or `1` (necessarily a non-zero)
 
 Setting the timeout to `0` will disable timeout functionality (will wait indefinitely)
 
+#### Graceful.captureExceptions = false {boolean}
+
+Whether to treat `uncaughtException` event as a terminating event and trigger graceful shutdown.
+
+```typescript
+Graceful.captureExceptions = true;
+
+throw new Error('DANG!'); // this will now trigger graceful shutdown 
+```
+
+#### Graceful.captureExceptions = false {boolean}
+
+Whether to treat `unhandledRejection` event as a terminating event and trigger graceful shutdown.
+On newer `node` versions `unhandledRejection` is in-fact a terminating event
+
+```typescript
+Graceful.captureRejections = true;
+
+Promise.reject(new Error('DANG!')); // this will now trigger graceful shutdown 
+```
+
 #### exitCode
 
-Graceful will obey process.exitCode property value when exiting
-apart from forced exit cases where the exit code must be non-zero.
+`Graceful` will obey `process.exitCode` property value when exiting unless the exit is forced (double signal, timeout) in which case the exit code must be non-zero. 

@@ -3,10 +3,12 @@
 const Graceful = require('../');
 
 Graceful.on('exit', done => {
-    setTimeout(() => {
-        process.stdout.write('ok');
-        done();
-    }, 100)
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            process.stdout.write('ok');
+            resolve();
+        }, 100)
+    });
 });
 
 Graceful.exit();
