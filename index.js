@@ -7,9 +7,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Graceful = /** @class */ (function () {
     function Graceful() {
     }
-    Graceful.killProcess = function (force) {
-        process.exit(process.exitCode || (force ? 1 : 0));
-    };
     Object.defineProperty(Graceful, "captureExceptions", {
         get: function () {
             return Graceful._captureExceptions;
@@ -136,6 +133,9 @@ var Graceful = /** @class */ (function () {
             }
             Graceful.isRegistered = false;
         }
+    };
+    Graceful.killProcess = function (force) {
+        process.exit(process.exitCode || (force ? 1 : 0));
     };
     Graceful.DEADLY_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGBREAK', 'SIGHUP'];
     Graceful.exitOnDouble = true;

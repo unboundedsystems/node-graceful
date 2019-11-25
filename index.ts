@@ -7,10 +7,6 @@
 export default class Graceful {
     private static DEADLY_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGBREAK', 'SIGHUP'];
 
-    private static killProcess(force: boolean) {
-        process.exit(process.exitCode || (force ? 1 : 0));
-    }
-
     public static exitOnDouble = true;
     public static timeout = 30000;
 
@@ -153,6 +149,10 @@ export default class Graceful {
             }
             Graceful.isRegistered = false
         }
+    }
+
+    private static killProcess(force: boolean) {
+        process.exit(process.exitCode || (force ? 1 : 0));
     }
 }
 

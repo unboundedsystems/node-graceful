@@ -33,6 +33,13 @@ let tests = [
         expectedExitCode: 0
     },
     {
+        name: 'Timeout exit',
+        child: './exit-timeout',
+        signal: 'SIGTERM',
+        expectedOutput: 'ok1',
+        expectedExitCode: 1
+    },
+    {
         name: 'Multiple listeners',
         child: './multiple-listeners',
         expectedOutput: 'ok',
@@ -94,13 +101,13 @@ let tests = [
     },
     {
         name: 'Unhandled Rejection - Disabled',
-        child: './unhandled-rejection',
+        child: './unhandled-rejection-disabled',
         expectedOutput: '',
         expectedExitCode: 0
     },
     {
         name: 'Unhandled Rejection - Toggled',
-        child: './unhandled-rejection',
+        child: './unhandled-rejection-toggled',
         expectedOutput: '',
         expectedExitCode: 0
     },

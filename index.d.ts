@@ -1,6 +1,5 @@
 export default class Graceful {
     private static DEADLY_SIGNALS;
-    private static killProcess;
     static exitOnDouble: boolean;
     static timeout: number;
     private static _captureExceptions;
@@ -22,6 +21,7 @@ export default class Graceful {
     private static onDeadlyEvent;
     private static invokeListener;
     private static updateRegistration;
+    private static killProcess;
 }
 export declare type GracefulListener = (signal: string, details?: object) => (void | any | Promise<any> | Promise<void> | Promise<Error>);
 export declare type GracefulSubscription = () => void;
