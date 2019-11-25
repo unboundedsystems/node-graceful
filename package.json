@@ -2,7 +2,7 @@
   "name": "node-graceful",
   "version": "3.0.0",
   "description": "Graceful process exit manager. allows waiting on multiple async services.",
-  "main": "index",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/mrbar42/node-graceful.git"
