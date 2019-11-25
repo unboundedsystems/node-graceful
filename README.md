@@ -1,6 +1,6 @@
 # node-graceful
 
-[![Build Status](https://travis-ci.org/mrbar42/node-graceful.svg?branch=master)](https://travis-ci.org/mrbar42/node-graceful) [![npm](https://img.shields.io/npm/v/node-graceful.svg)](https://www.npmjs.com/package/node-graceful) ![npm bundle size (version)](https://img.shields.io/bundlephobia/minzip/node-graceful/2.0.1?label=Install%20size)
+[![Build Status](https://travis-ci.org/mrbar42/node-graceful.svg?branch=master)](https://travis-ci.org/mrbar42/node-graceful) [![npm](https://img.shields.io/npm/v/node-graceful.svg)](https://www.npmjs.com/package/node-graceful) ![npm bundle size (version)](https://img.shields.io/bundlephobia/minzip/node-graceful?label=Install%20size)
 
 node-graceful is a small helper module without dependencies that aims to ease graceful exit
  of complex node programs including async waiting on multiple independent modules.
