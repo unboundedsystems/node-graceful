@@ -105,7 +105,7 @@ Graceful.on('exit', async () => {
 ```
 
 if old style callback is needed, wrap the logic with a promise
-```
+```javascript
 const server = require('http').createServer(function (req, res) {
     res.write('ok');
     res.end()
