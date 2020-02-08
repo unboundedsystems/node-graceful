@@ -64,6 +64,7 @@ export default class Graceful {
         return () => Graceful.off('exit', listener);
     }
 
+    //@ts-ignore
     public static off(signal: 'exit', listener: GracefulListener) {
         const index = Graceful.listeners.indexOf(listener);
         if (index !== -1) Graceful.listeners.splice(index, 1);

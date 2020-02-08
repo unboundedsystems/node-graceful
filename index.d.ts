@@ -10,10 +10,8 @@ export default class Graceful {
     private static exceptionListener;
     private static rejectionListener;
     private static signalsListeners;
-    static get captureExceptions(): boolean;
-    static set captureExceptions(newValue: boolean);
-    static get captureRejections(): boolean;
-    static set captureRejections(newValue: boolean);
+    static captureExceptions: boolean;
+    static captureRejections: boolean;
     static on(signal: 'exit', listener: GracefulListener): GracefulSubscription;
     static off(signal: 'exit', listener: GracefulListener): void;
     static clear(): void;

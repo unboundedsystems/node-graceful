@@ -50,6 +50,7 @@ var Graceful = /** @class */ (function () {
         Graceful.updateRegistration();
         return function () { return Graceful.off('exit', listener); };
     };
+    //@ts-ignore
     Graceful.off = function (signal, listener) {
         var index = Graceful.listeners.indexOf(listener);
         if (index !== -1)
