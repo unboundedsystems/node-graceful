@@ -32,7 +32,6 @@
     "prepublishOnly": "npm run test && npm run build"
   },
   "files": [
-    "index.ts",
     "index.d.ts",
     "index.js",
     "README.md"
