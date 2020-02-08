@@ -1,6 +1,6 @@
 {
-  "name": "node-graceful",
-  "version": "3.0.0",
+  "name": "@unboundedsystems/node-graceful",
+  "version": "3.0.0-unb.1",
   "description": "Graceful process exit manager. allows waiting on multiple async services.",
   "main": "index.js",
   "repository": {
