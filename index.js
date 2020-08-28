@@ -4,6 +4,7 @@
 // |----------------------------------------------------------------------|
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+var signals = process.binding('constants').os.signals;
 var Graceful = /** @class */ (function () {
     function Graceful() {
     }
@@ -62,7 +63,7 @@ var Graceful = /** @class */ (function () {
         Graceful.updateRegistration();
     };
     Graceful.exit = function (code, signal) {
-        if (signal === void 0) { signal = 'SIGTERM'; }
+        if (signal === void 0) { signal = 'exit'; }
         var exitSignal = typeof code === 'string' ? code : signal;
         if (typeof code === 'number') {
             process.exitCode = code;
@@ -71,6 +72,12 @@ var Graceful = /** @class */ (function () {
     };
     Graceful.onDeadlyEvent = function (signal, details) {
         // console.log(signal, details);
+        if (Graceful.DEADLY_SIGNALS.includes(signal) && process.exitCode === undefined) {
+            var signum = signals[signal];
+            if (signum !== undefined) {
+                process.exitCode = 128 + signum;
+            }
+        }
         if (Graceful.isExiting) {
             if (Graceful.exitOnDouble)
                 Graceful.killProcess(true);

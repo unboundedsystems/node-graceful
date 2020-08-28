@@ -4,6 +4,8 @@
 // |----------------------------------------------------------------------|
 'use strict';
 
+const signals = (process as any).binding('constants').os.signals;
+
 export default class Graceful {
     private static DEADLY_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGBREAK', 'SIGHUP'];
 
@@ -77,7 +79,7 @@ export default class Graceful {
         Graceful.updateRegistration();
     }
 
-    public static exit(code?: number | string, signal = 'SIGTERM') {
+    public static exit(code?: number | string, signal = 'exit') {
         let exitSignal = typeof code === 'string' ? code : signal;
 
         if (typeof code === 'number') {
@@ -89,6 +91,12 @@ export default class Graceful {
 
     private static onDeadlyEvent(signal: string, details?: object) {
         // console.log(signal, details);
+        if (Graceful.DEADLY_SIGNALS.includes(signal) && process.exitCode === undefined) {
+            const signum = signals[signal];
+            if (signum !== undefined) {
+                process.exitCode = 128 + signum;
+            }
+        }
         if (Graceful.isExiting) {
             if (Graceful.exitOnDouble) Graceful.killProcess(true);
             return

@@ -16,34 +16,34 @@ let tests = [
         child: './sigterm-exit',
         signal: 'SIGTERM',
         expectedOutput: 'ok',
-        expectedExitCode: 0
+        expectedExitCode: 143
     },
     {
         name: 'SIGINT exit',
         child: './sigint-exit',
         signal: 'SIGINT',
         expectedOutput: 'ok',
-        expectedExitCode: 0
+        expectedExitCode: 130
     },
     {
         name: 'SIGHUP exit',
         child: './sighup-exit',
         signal: 'SIGHUP',
         expectedOutput: 'ok',
-        expectedExitCode: 0
+        expectedExitCode: 129
     },
     {
         name: 'Timeout exit',
         child: './exit-timeout',
         signal: 'SIGTERM',
         expectedOutput: 'ok1',
-        expectedExitCode: 1
+        expectedExitCode: 143
     },
     {
         name: 'Multiple listeners',
         child: './multiple-listeners',
         expectedOutput: 'ok',
-        expectedExitCode: 0
+        expectedExitCode: 130
     },
     {
         name: 'Forced exit',
@@ -55,7 +55,7 @@ let tests = [
         name: 'Self triggered',
         child: './self-triggered',
         expectedOutput: 'ok',
-        expectedExitCode: 0
+        expectedExitCode: 143
     },
     {
         name: 'Clear listeners',
@@ -142,6 +142,7 @@ function asyncRunner() {
     let ended = false;
     let child = execFile('node', [path], (err, stdout) => {
         clearTimeout(timer);
+        console.log("STDOUT:", stdout);
         ended = true;
         if (err && /Error/.test(err.message)) {
             console.error(`[${count}/${total}] [ERROR] ${test.name}: Failed with error\n`,
